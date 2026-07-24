@@ -2,11 +2,14 @@
 
 import { useState } from 'react';
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Menu, X, ShoppingCart, MessageSquare, Users, HelpCircle, Newspaper, HeadphonesIcon, Vote, Swords, Home } from 'lucide-react';
+import { Menu, X, ShoppingCart, MessageSquare, Users, HelpCircle, Newspaper, HeadphonesIcon, Vote, Swords, Home, LogIn, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { useSettings } from '@/hooks/use-settings';
+import { useAuth } from '@/contexts/AuthContext';
+import { toast } from 'sonner';
 
 const NAV_ITEMS = [
   { path: '/', label: 'Home', icon: Home },
@@ -22,8 +25,22 @@ const NAV_ITEMS = [
 export default function Navbar() {
   const [isOpen, setIsOpen] = useState(false);
   const pathname = usePathname();
+  const router = useRouter();
   const { data: settings } = useSettings();
+  const { user, profile, loading: authLoading, signOut } = useAuth();
   const discordInviteUrl = settings?.discord_invite_url;
+
+  async function handleSignOut() {
+    await fetch('/api/auth/logout', { method: 'POST' });
+    await signOut();
+    toast.success('Signed out');
+    router.push('/');
+    router.refresh();
+  }
+
+  const displayName = profile?.display_name || user?.email?.split('@')[0] || 'Account';
+  const avatarUrl = profile?.avatar_url || user?.user_metadata?.avatar_url || user?.user_metadata?.picture;
+  const avatarInitial = displayName.charAt(0).toUpperCase();
 
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 glass-strong">
@@ -65,6 +82,44 @@ export default function Navbar() {
 
           {/* Right side */}
           <div className="flex items-center gap-2">
+            {!authLoading && (
+              user ? (
+                <div className="hidden sm:flex items-center gap-2">
+                  <Avatar className="h-7 w-7 border border-primary/20">
+                    <AvatarImage src={avatarUrl} alt="" />
+                    <AvatarFallback className="text-xs">{avatarInitial}</AvatarFallback>
+                  </Avatar>
+                  <span className="flex items-center gap-1.5 text-xs text-muted-foreground max-w-[120px] truncate">
+                    <User className="w-3.5 h-3.5 shrink-0" />
+                    {displayName}
+                  </span>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="text-xs text-muted-foreground hover:text-foreground"
+                    onClick={handleSignOut}
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span className="hidden md:inline ml-1.5">Sign Out</span>
+                  </Button>
+                </div>
+              ) : (
+                <div className="hidden sm:flex items-center gap-1">
+                  <Link href="/login">
+                    <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-primary">
+                      <LogIn className="w-4 h-4" />
+                      <span className="ml-1.5">Login</span>
+                    </Button>
+                  </Link>
+                  <Link href="/register">
+                    <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-primary">
+                      <User className="w-4 h-4" />
+                      <span className="ml-1.5">Register</span>
+                    </Button>
+                  </Link>
+                </div>
+              )
+            )}
             <a href={discordInviteUrl || '/support'} target={discordInviteUrl ? '_blank' : undefined} rel="noopener noreferrer">
               <Button variant="ghost" size="sm" className="text-xs text-muted-foreground hover:text-accent" disabled={!discordInviteUrl}>
                 <MessageSquare className="w-4 h-4" />
@@ -107,6 +162,36 @@ export default function Navbar() {
                   </Link>
                 );
               })}
+              {!authLoading && (
+                user ? (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setIsOpen(false);
+                      handleSignOut();
+                    }}
+                    className="flex w-full items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-secondary"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span className="text-sm font-medium">Sign Out ({displayName})</span>
+                  </button>
+                ) : (
+                  <>
+                    <Link href="/login" onClick={() => setIsOpen(false)}>
+                      <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-secondary">
+                        <LogIn className="w-4 h-4" />
+                        <span className="text-sm font-medium">Login</span>
+                      </div>
+                    </Link>
+                    <Link href="/register" onClick={() => setIsOpen(false)}>
+                      <div className="flex items-center gap-3 px-3 py-2.5 rounded-lg text-muted-foreground hover:bg-secondary">
+                        <User className="w-4 h-4" />
+                        <span className="text-sm font-medium">Register</span>
+                      </div>
+                    </Link>
+                  </>
+                )
+              )}
             </div>
           </motion.div>
         )}

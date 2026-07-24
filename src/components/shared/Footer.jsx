@@ -48,7 +48,7 @@ export default function Footer() {
             <div className="space-y-2.5">
               {[
                 { label: 'FAQ', path: '/faq' },
-                { label: 'Discord Support', path: '/support' },
+                { label: 'Support Tickets', path: '/support' },
                 { label: 'Staff Team', path: '/staff' },
                 { label: 'About Us', path: '/about' },
               ].map(link => (

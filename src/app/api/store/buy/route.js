@@ -1,29 +1,46 @@
 import { z } from 'zod';
 import { getAdminClient } from '@/lib/supabase/admin';
 import { createClient } from '@/lib/supabase/server';
-import { deliverPurchase, isValidMinecraftUsername } from '@/lib/server/rcon';
+import { isValidMinecraftUsername } from '@/lib/server/rcon';
 import { logAudit, getClientIp } from '@/lib/server/audit';
 import { jsonOk, jsonError } from '@/lib/server/api-response';
 
 const buySchema = z.object({
   product_id: z.string().uuid(),
-  minecraft_username: z.string().min(3).max(16),
+  minecraft_username: z.string().trim().min(3).max(16),
   payment_method: z.enum(['paypal', 'stripe', 'tebex', 'other', 'manual']).optional(),
-  transaction_id: z.string().optional(),
-  /** Set true only from PayPal webhook or admin — never trust client alone for paid orders */
-  payment_confirmed: z.boolean().optional(),
 });
+
+async function findPendingPurchase(admin, userId, productId, minecraftUsername) {
+  const { data, error } = await admin
+    .from('purchases')
+    .select('*')
+    .eq('user_id', userId)
+    .eq('product_id', productId)
+    .eq('minecraft_username', minecraftUsername)
+    .eq('status', 'pending')
+    .order('created_at', { ascending: false })
+    .limit(1)
+    .maybeSingle();
+
+  if (error) throw error;
+  return data;
+}
 
 export async function POST(request) {
   const supabase = await createClient();
-  const { data: authData } = await supabase.auth.getUser();
+  const { data: authData, error: authError } = await supabase.auth.getUser();
   const user = authData?.user ?? null;
+
+  if (authError || !user) {
+    return jsonError('Authentication required', 401);
+  }
 
   let body;
   try {
     body = buySchema.parse(await request.json());
-  } catch (e) {
-    return jsonError(e.errors?.[0]?.message || 'Invalid request', 400);
+  } catch (error) {
+    return jsonError(error.errors?.[0]?.message || 'Invalid request', 400);
   }
 
   if (!isValidMinecraftUsername(body.minecraft_username)) {
@@ -42,117 +59,70 @@ export async function POST(request) {
     return jsonError('Product not found', 404);
   }
 
-  const amount = product.sale_price ?? product.price;
-
-  // Purchases require server-side payment confirmation (webhook or manual admin)
-  if (!body.payment_confirmed) {
-    const { data: purchase, error } = await admin
-      .from('purchases')
-      .insert({
-        user_id: user?.id ?? null,
-        product_id: product.id,
-        product_title: product.title,
-        amount,
-        payment_method: body.payment_method || 'paypal',
-        status: 'pending',
-        minecraft_username: body.minecraft_username,
-        buyer_email: user?.email ?? null,
-        transaction_id: body.transaction_id || null,
-        delivery_status: 'pending',
-      })
-      .select()
-      .single();
-
-    if (error) return jsonError(error.message, 500);
-
-    await logAudit({
-      action: 'purchase_created',
-      category: 'store',
-      details: `Pending purchase ${purchase.id} for ${product.title}`,
-      userId: user?.id ?? null,
-      userName: user?.email || 'Guest',
-      ipAddress: getClientIp(request),
-    });
-
-    return jsonOk({
-      purchase,
-      message: 'Purchase recorded. Complete payment to receive your rank.',
-      requires_payment: true,
-    });
+  try {
+    const existingPending = await findPendingPurchase(admin, user.id, product.id, body.minecraft_username);
+    if (existingPending) {
+      return jsonOk({
+        purchase: existingPending,
+        message: 'Purchase already recorded. Complete payment to receive your rank.',
+        requires_payment: true,
+        existing: true,
+      });
+    }
+  } catch (error) {
+    return jsonError(error.message, 500);
   }
 
-  if (!user) {
-    return jsonError('Confirmed purchases require authentication', 403);
-  }
-
+  // A browser can only create a pending order. Completion is reserved for a
+  // verified payment webhook or a trusted server-side administrative action.
   const { data: purchase, error: purchaseError } = await admin
     .from('purchases')
     .insert({
       user_id: user.id,
       product_id: product.id,
       product_title: product.title,
-      amount,
+      amount: product.sale_price ?? product.price,
       payment_method: body.payment_method || 'paypal',
-      status: 'completed',
+      status: 'pending',
       minecraft_username: body.minecraft_username,
-      buyer_email: user.email,
-      transaction_id: body.transaction_id || null,
+      buyer_email: user.email ?? null,
       delivery_status: 'pending',
     })
     .select()
     .single();
 
-  if (purchaseError) return jsonError(purchaseError.message, 500);
-
-  let commandsExecuted = [];
-  let deliveryStatus = 'delivered';
-
-  try {
-    commandsExecuted = await deliverPurchase(product, body.minecraft_username);
-  } catch (rconErr) {
-    deliveryStatus = 'failed';
-    await admin
-      .from('purchases')
-      .update({
-        status: 'completed',
-        delivery_status: 'failed',
-        commands_executed: [],
-        notes: rconErr.message,
-      })
-      .eq('id', purchase.id);
-
-    await logAudit({
-      action: 'purchase_delivery_failed',
-      category: 'store',
-      details: rconErr.message,
-      userId: user.id,
-      userName: user.email,
-      ipAddress: getClientIp(request),
-      severity: 'error',
-    });
-
-    return jsonError('Payment recorded but rank delivery failed. Contact support.', 500);
+  if (purchaseError) {
+    // The partial unique index handles simultaneous requests safely.
+    if (purchaseError.code === '23505') {
+      try {
+        const duplicate = await findPendingPurchase(admin, user.id, product.id, body.minecraft_username);
+        if (duplicate) {
+          return jsonOk({
+            purchase: duplicate,
+            message: 'Purchase already recorded. Complete payment to receive your rank.',
+            requires_payment: true,
+            existing: true,
+          });
+        }
+      } catch {
+        // Return the original insert error if the follow-up read fails.
+      }
+    }
+    return jsonError(purchaseError.message, 500);
   }
 
-  const { data: updated } = await admin
-    .from('purchases')
-    .update({
-      status: 'completed',
-      delivery_status: deliveryStatus,
-      commands_executed: commandsExecuted,
-    })
-    .eq('id', purchase.id)
-    .select()
-    .single();
-
   await logAudit({
-    action: 'purchase_delivered',
+    action: 'purchase_created',
     category: 'store',
-    details: `Delivered ${product.title} to ${body.minecraft_username}`,
+    details: `Pending purchase ${purchase.id} for ${product.title}`,
     userId: user.id,
     userName: user.email,
     ipAddress: getClientIp(request),
   });
 
-  return jsonOk({ purchase: updated, delivered: true });
+  return jsonOk({
+    purchase,
+    message: 'Purchase recorded. Complete payment to receive your rank.',
+    requires_payment: true,
+  });
 }

@@ -3,16 +3,19 @@
 import { motion } from 'framer-motion';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { ShoppingCart, MessageSquare, Gamepad2, Copy, Check } from 'lucide-react';
+import { ShoppingCart, MessageSquare, Gamepad2, Copy, Check, LogIn, UserPlus } from 'lucide-react';
 import { useState } from 'react';
 import { toast } from 'sonner';
 import { useSettings } from '@/hooks/use-settings';
+import { useAuth } from '@/contexts/AuthContext';
 
 export default function HeroSection() {
   const [copied, setCopied] = useState(false);
   const { data: settings } = useSettings();
+  const { user, profile, loading: authLoading } = useAuth();
   const serverIp = settings?.server_ip;
   const discordInviteUrl = settings?.discord_invite_url;
+  const displayName = profile?.display_name || user?.email?.split('@')[0];
 
   const copyIP = () => {
     if (!serverIp) return;
@@ -59,7 +62,7 @@ export default function HeroSection() {
           </p>
 
           {/* CTA Buttons */}
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-4">
             <Button size="lg" className="bg-primary hover:bg-primary/90 glow-purple text-sm px-8 w-full sm:w-auto">
               <Gamepad2 className="w-4 h-4 mr-2" />
               Join Now
@@ -77,6 +80,31 @@ export default function HeroSection() {
               </Button>
             </a>
           </div>
+
+          {!authLoading && (
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 mb-8">
+              {user ? (
+                <p className="text-sm text-muted-foreground">
+                  Signed in as <span className="text-primary font-medium">{displayName}</span>
+                </p>
+              ) : (
+                <>
+                  <Link href="/login">
+                    <Button size="sm" variant="outline" className="border-primary/30 hover:bg-primary/10 text-sm px-6 w-full sm:w-auto">
+                      <LogIn className="w-4 h-4 mr-2" />
+                      Login
+                    </Button>
+                  </Link>
+                  <Link href="/register">
+                    <Button size="sm" variant="outline" className="border-primary/30 hover:bg-primary/10 text-sm px-6 w-full sm:w-auto">
+                      <UserPlus className="w-4 h-4 mr-2" />
+                      Register
+                    </Button>
+                  </Link>
+                </>
+              )}
+            </div>
+          )}
 
           {/* Server IP */}
           <motion.button

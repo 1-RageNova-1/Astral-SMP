@@ -4,6 +4,7 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { useState, Suspense } from 'react';
 import { Toaster } from 'sonner';
 import ScrollToTop from '@/components/ScrollToTop';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 export default function Providers({ children }) {
   const [queryClient] = useState(() => new QueryClient({
@@ -18,12 +19,14 @@ export default function Providers({ children }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <Suspense fallback={null}>
-        <ScrollToTop />
-      </Suspense>
+      <AuthProvider>
+        <Suspense fallback={null}>
+          <ScrollToTop />
+        </Suspense>
 
-      {children}
-      <Toaster />
+        {children}
+        <Toaster />
+      </AuthProvider>
     </QueryClientProvider>
   );
 }

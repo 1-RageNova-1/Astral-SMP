@@ -10,7 +10,7 @@ export async function GET() {
     const admin = getAdminClient();
 
     const [purchasesResult, ticketsResult, productsResult, newsResult] = await Promise.all([
-      admin.from('purchases').select('*').order('created_at', { ascending: false }),
+      admin.from('purchases').select('*, buyer:users(id, email, display_name, avatar_url)').order('created_at', { ascending: false }),
       admin.from('tickets').select('*').order('created_at', { ascending: false }),
       admin.from('products').select('id, title, category').order('sort_order'),
       admin.from('news').select('id').order('created_at', { ascending: false }),

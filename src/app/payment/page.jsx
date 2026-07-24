@@ -27,7 +27,18 @@ export default function Payment() {
   const minecraftUsername = searchParams.get('minecraftUsername');
 
   useEffect(() => {
-    if (!productId || !productTitle || !productPrice || !minecraftUsername || hasRecordedPurchase.current) {
+    if (!productId || !productTitle || !productPrice || !minecraftUsername) {
+      return;
+    }
+
+    const dedupeKey = `purchase:${productId}:${minecraftUsername}`;
+    if (hasRecordedPurchase.current || sessionStorage.getItem(dedupeKey)) {
+      if (sessionStorage.getItem(dedupeKey)) {
+        setPurchaseState({
+          status: 'saved',
+          message: 'Your purchase information has been saved.',
+        });
+      }
       return;
     }
 
@@ -40,12 +51,14 @@ export default function Payment() {
       payment_method: 'paypal',
     })
       .then(({ message }) => {
+        sessionStorage.setItem(dedupeKey, '1');
         setPurchaseState({
           status: 'saved',
           message: message || 'Your purchase information has been saved.',
         });
       })
       .catch((error) => {
+        hasRecordedPurchase.current = false;
         setPurchaseState({
           status: 'error',
           message: error.message || 'We could not save this purchase yet. Please try again later.',

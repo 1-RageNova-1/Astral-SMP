@@ -3,7 +3,7 @@
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/api/apiClient';
 import GlassCard from '@/components/shared/GlassCard';
-import { ShoppingCart, Newspaper, HeadphonesIcon, DollarSign, TrendingUp } from 'lucide-react';
+import { ShoppingCart, DollarSign, TrendingUp, HeadphonesIcon, CheckCircle2, AlertCircle } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 
 export default function Dashboard() {
@@ -13,24 +13,25 @@ export default function Dashboard() {
   });
 
   const purchases = data.purchases ?? [];
-  const tickets = data.tickets ?? [];
   const products = data.products ?? [];
-  const posts = data.news ?? [];
-
   const totalRevenue = purchases.filter(p => p.status === 'completed').reduce((sum, p) => sum + Number(p.amount || 0), 0);
-  const openTickets = tickets.filter(t => t.status === 'open' || t.status === 'in_progress').length;
+  const pendingPayments = purchases.filter(p => p.status === 'pending').length;
+  const completedPayments = purchases.filter(p => p.status === 'completed').length;
+  const failedPayments = purchases.filter(p => p.status === 'failed').length;
 
   const stats = [
     { label: 'Total Revenue', value: `$${totalRevenue.toFixed(2)}`, icon: DollarSign, color: 'text-green-400' },
-    { label: 'Total Purchases', value: purchases.length, icon: ShoppingCart, color: 'text-primary' },
-    { label: 'Open Tickets', value: openTickets, icon: HeadphonesIcon, color: 'text-yellow-400' },
-    { label: 'Products', value: products.length, icon: TrendingUp, color: 'text-accent' },
-    { label: 'News Posts', value: posts.length, icon: Newspaper, color: 'text-blue-400' },
+    { label: 'Total Payments', value: purchases.length, icon: ShoppingCart, color: 'text-primary' },
+    { label: 'Pending Payments', value: pendingPayments, icon: HeadphonesIcon, color: 'text-yellow-400' },
+    { label: 'Completed Payments', value: completedPayments, icon: CheckCircle2, color: 'text-accent' },
+    { label: 'Failed Payments', value: failedPayments, icon: AlertCircle, color: 'text-red-400' },
+    { label: 'Products', value: products.length, icon: TrendingUp, color: 'text-blue-400' },
   ];
 
   const statusData = [
     { name: 'Completed', value: purchases.filter(p => p.status === 'completed').length, color: '#22c55e' },
     { name: 'Pending', value: purchases.filter(p => p.status === 'pending').length, color: '#f59e0b' },
+    { name: 'Failed', value: failedPayments, color: '#ef4444' },
     { name: 'Refunded', value: purchases.filter(p => p.status === 'refunded').length, color: '#ef4444' },
   ].filter(d => d.value > 0);
 
@@ -43,7 +44,7 @@ export default function Dashboard() {
     <div>
       <h1 className="text-2xl font-bold text-foreground mb-6">Admin Dashboard</h1>
 
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 mb-8">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 mb-8">
         {stats.map((stat, i) => {
           const Icon = stat.icon;
           return (
@@ -101,7 +102,10 @@ export default function Dashboard() {
               <div key={p.id} className="flex items-center justify-between p-3 rounded-lg bg-secondary/30 text-sm">
                 <div>
                   <span className="font-medium text-foreground">{p.product_title}</span>
-                  <span className="text-muted-foreground ml-2">by {p.minecraft_username || p.buyer_email || 'Unknown'}</span>
+                  <span className="text-muted-foreground ml-2">
+                    by {p.buyer?.display_name || p.buyer?.email || p.buyer_email || 'Unknown'}
+                    {p.minecraft_username ? ` (${p.minecraft_username})` : ''}
+                  </span>
                 </div>
                 <div className="flex items-center gap-3">
                   <span className="text-primary font-semibold">${Number(p.amount).toFixed(2)}</span>

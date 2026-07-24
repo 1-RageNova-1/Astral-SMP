@@ -1,13 +1,13 @@
 import { redirect } from 'next/navigation';
-import AdminSettings from '@/views/admin/AdminSettings';
+import TicketPanel from '@/components/admin/TicketPanel';
 import { createClient } from '@/lib/supabase/server';
 
 const STAFF_ROLES = ['helper', 'moderator', 'admin'];
 
-export default async function Page() {
+export default async function AdminTicketsPage() {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
-  if (!user) redirect('/login?redirect=/admin/settings');
+  if (!user) redirect('/login?redirect=/admin/tickets');
 
   const { data: profile } = await supabase
     .from('users')
@@ -16,6 +16,5 @@ export default async function Page() {
     .maybeSingle();
 
   if (!profile || !STAFF_ROLES.includes(profile.staff_role)) redirect('/');
-
-  return <AdminSettings />;
+  return <TicketPanel />;
 }

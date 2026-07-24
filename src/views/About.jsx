@@ -9,7 +9,7 @@ const SECTIONS = [
   {
     icon: History,
     title: 'Our History',
-    content: 'Astral Dupes was founded in 2023 by a group of passionate Minecraft players who wanted to create something different. What started as a small SMP server quickly grew into a thriving community of thousands.',
+    content: 'Astral Dupes was founded back in 2025 before being discontinued in November 2025. After a long break and a lot of player requests, we decided to bring it back in 2026. We hope the player base will comeback as his prime.',
     color: 'text-primary',
   },
   {
@@ -21,13 +21,13 @@ const SECTIONS = [
   {
     icon: Sparkles,
     title: 'Features',
-    content: 'Custom plugins, unique game mechanics, anti-cheat protection, weekly events, a balanced economy, custom enchantments, clan system, and so much more. We\'re constantly adding new content.',
+    content: 'Custom plugins, unique commands, anti-cheat protection, weekly events, a balanced economy, custom enchantments (in development), clan system (in development). We\'re constantly adding new content.',
     color: 'text-yellow-400',
   },
   {
     icon: Rocket,
     title: 'Future Plans',
-    content: 'We\'re working on new game modes, a mobile companion app, expanded PvP arenas, a tournament system, and deeper Discord integration. Season 4 is already in development with exciting new features.',
+    content: 'We\'re working on new custom enchants , clan system (fights , global leaderboards, rewards), tournament system. Season 1  is already in development and almost finished with exciting new features.',
     color: 'text-green-400',
   },
 ];

@@ -4,15 +4,18 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import {
   LayoutDashboard,
+  MessageSquare,
   Swords,
   Settings,
   LogOut
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
 
 const MENU = [
   { path: '/admin', label: 'Dashboard', icon: LayoutDashboard },
+  { path: '/admin/tickets', label: 'Tickets', icon: MessageSquare },
   { path: '/admin/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -20,13 +23,14 @@ export default function AdminSidebar({ onNavigate }) {
   const pathname = usePathname();
   const router = useRouter();
 
-  // 🔐 LOGOUT FUNCTION
+  // 🔐 LOGOUT FUNCTION — Supabase auth.signOut() replaces the old admin-auth cookie
   const handleLogout = async () => {
-    await fetch('/api/admin/logout', {
-      method: 'POST',
-    });
+    const supabase = createClient();
+    if (supabase) {
+      await supabase.auth.signOut();
+    }
 
-    router.push('/admin/login');
+    router.push('/');
     router.refresh();
   };
 
