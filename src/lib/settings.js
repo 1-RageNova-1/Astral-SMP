@@ -1,5 +1,5 @@
 export const DEFAULT_SETTINGS = {
-  site_name: 'Astral Dupes',
+  site_name: 'Astral Smp',
   site_description: 'The ultimate Minecraft duplication server',
   server_ip: 'play.astraldupes.com',
   server_port: '25565',

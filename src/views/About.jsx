@@ -9,7 +9,7 @@ const SECTIONS = [
   {
     icon: History,
     title: 'Our History',
-    content: 'Astral Dupes was founded back in 2025 before being discontinued in November 2025. After a long break and a lot of player requests, we decided to bring it back in 2026. We hope the player base will comeback as his prime.',
+    content: 'Astral Smp was founded back in 2025 before being discontinued in November 2025. After a long break and a lot of player requests, we decided to bring it back in 2026. We hope the player base will comeback as his prime.',
     color: 'text-primary',
   },
   {
@@ -38,7 +38,7 @@ export default function About() {
       <section className="py-16 px-4">
         <div className="max-w-4xl mx-auto">
           <SectionHeading
-            title="About Astral Dupes"
+            title="About Astral Smp"
             subtitle="Learn about our server, our community, and our vision"
           />
 
@@ -66,7 +66,7 @@ export default function About() {
             <Users className="w-10 h-10 text-primary mx-auto mb-3" />
             <h3 className="text-lg font-semibold text-foreground mb-2">Meet Our Team</h3>
             <p className="text-sm text-muted-foreground mb-4">
-              Our dedicated staff team works around the clock to keep Astral Dupes running smoothly.
+              Our dedicated staff team works around the clock to keep Astral Smp running smoothly.
             </p>
             <a href="/staff" className="text-sm text-primary hover:underline">View Staff Page →</a>
           </GlassCard>

@@ -30,7 +30,7 @@ export default function News() {
     <PageLayout>
       <section className="py-16 px-4">
         <div className="max-w-4xl mx-auto">
-          <SectionHeading title="News & Updates" subtitle="Latest from Astral Dupes" />
+          <SectionHeading title="News & Updates" subtitle="Latest from Astral Smp" />
 
           <div className="space-y-4">
             {posts.map((post, i) => (

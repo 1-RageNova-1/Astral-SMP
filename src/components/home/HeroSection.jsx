@@ -51,7 +51,7 @@ export default function HeroSection() {
 
           {/* Title */}
           <h1 className="font-display text-3xl sm:text-5xl md:text-6xl text-primary text-glow-purple mb-4 leading-tight">
-            ASTRAL DUPES
+            Astral Smp
           </h1>
           <p className="text-lg sm:text-xl text-muted-foreground max-w-2xl mx-auto mb-3 font-light">
             {settings?.site_description}

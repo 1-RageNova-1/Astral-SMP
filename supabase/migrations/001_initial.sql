@@ -1,4 +1,4 @@
--- Astral Dupes production schema
+-- Astral Smp production schema
 
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 

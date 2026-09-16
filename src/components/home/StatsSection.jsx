@@ -5,10 +5,10 @@ import SectionHeading from '@/components/shared/SectionHeading';
 import { Users, ShoppingCart, Gamepad2, MessageSquare } from 'lucide-react';
 
 const STATS = [
-  { label: 'Registered Users', value: '12,450+', icon: Users, color: 'text-primary' },
-  { label: 'Total Purchases', value: '8,320+', icon: ShoppingCart, color: 'text-accent' },
-  { label: 'Players Joined', value: '45,000+', icon: Gamepad2, color: 'text-yellow-400' },
-  { label: 'Discord Members', value: '5,200+', icon: MessageSquare, color: 'text-blue-400' },
+  { label: 'Registered Users', value: '100+', icon: Users, color: 'text-primary' },
+  { label: 'Total Purchases', value: '3', icon: ShoppingCart, color: 'text-accent' },
+  { label: 'Players Joined', value: '250', icon: Gamepad2, color: 'text-yellow-400' }, // Mettre mongo db pour update automatiquement
+  { label: 'Discord Members', value: '12', icon: MessageSquare, color: 'text-blue-400' },
 ];
 
 export default function StatsSection() {

@@ -44,7 +44,7 @@ export default function AdminSidebar({ onNavigate }) {
         </div>
         <div>
           <span className="font-display text-xs text-primary">ADMIN</span>
-          <p className="text-xs text-muted-foreground">Astral Dupes</p>
+          <p className="text-xs text-muted-foreground">Astral Smp</p>
         </div>
       </div>
 

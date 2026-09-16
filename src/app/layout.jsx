@@ -4,7 +4,7 @@ import Providers from './providers';
 export const dynamic = 'force-dynamic';
 
 export const metadata = {
-  title: 'Astral Dupes',
+  title: 'Astral Smp',
   description: 'Minecraft server store and community',
 };
 

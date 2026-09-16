@@ -29,7 +29,7 @@ export default function Staff() {
     <PageLayout>
       <section className="py-16 px-4">
         <div className="max-w-4xl mx-auto">
-          <SectionHeading title="Our Team" subtitle="Meet the people behind Astral Dupes" />
+          <SectionHeading title="Our Team" subtitle="Meet the people behind Astral Smp" />
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             {members.map((member, i) => {
               const Icon = roleIcons[member.role] || User;

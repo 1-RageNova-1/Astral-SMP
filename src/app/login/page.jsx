@@ -2,7 +2,7 @@ import { Suspense } from 'react';
 import LoginForm from '@/components/auth/LoginForm';
 
 export const metadata = {
-  title: 'Sign In | Astral Dupes',
+  title: 'Sign In | Astral Smp',
   description: 'Sign in to your Astral account',
 };
 

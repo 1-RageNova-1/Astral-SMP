@@ -13,7 +13,7 @@ export default function ServerStatus() {
     players: 147,
     maxPlayers: 500,
     ping: 42,
-    motd: '§6Astral Dupes §7- §bSeason 3 Now Live!',
+    motd: '§6Astral Smp §7- §bSeason 3 Now Live!',
     lastUpdate: new Date().toISOString(),
   });
 
