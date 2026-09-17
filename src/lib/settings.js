@@ -6,7 +6,7 @@ export const DEFAULT_SETTINGS = {
   server_version: '1.20.4',
   discord_invite_url: '',
   discord_webhook_url: '',
-  discord_server_id: '',
+  discord_server_id: '1533061605603020943',
   store_currency: 'EUR',
   store_tax_rate: '0',
 };

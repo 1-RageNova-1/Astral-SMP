@@ -4,28 +4,28 @@ import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import SectionHeading from '@/components/shared/SectionHeading';
 import { Users, ShoppingCart, Gamepad2, MessageSquare } from 'lucide-react';
-import { api } from '@/api/apiClient';
+
+function unwrap(payload) {
+  if (!payload || typeof payload !== 'object') return null;
+  if (payload.player_count !== undefined || payload.discord_members !== undefined) return payload;
+  if (payload.data && typeof payload.data === 'object') return payload.data;
+  return payload;
+}
 
 export default function StatsSection() {
   const [stats, setStats] = useState({
-    registeredUsers: null,
-    totalPurchases: null,
-    playersOnline: null,
-    discordMembers: null,
+    playersOnline: 0,
+    discordMembers: 0,
   });
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        // Status serveur (joueurs en ligne + discord)
-        const status = await api.public.status();
-
-        // Pour les vrais compteurs (users + purchases) on peut les récupérer
-        // via l'admin dashboard si tu veux, sinon on garde simple pour l'instant
+        const res = await fetch('/api/public/status', { cache: 'no-store' });
+        const json = await res.json();
+        const status = unwrap(json) || {};
         setStats({
-          registeredUsers: null, // on peut l'ajouter plus tard
-          totalPurchases: null,
           playersOnline: status.player_count ?? 0,
           discordMembers: status.discord_members ?? 0,
         });
@@ -44,25 +44,25 @@ export default function StatsSection() {
   const STATS = [
     {
       label: 'Players Online',
-      value: loading ? '...' : (stats.playersOnline ?? 0).toLocaleString(),
+      value: loading ? '...' : Number(stats.playersOnline).toLocaleString(),
       icon: Gamepad2,
       color: 'text-yellow-400',
     },
     {
       label: 'Discord Members',
-      value: loading ? '...' : (stats.discordMembers ?? 0).toLocaleString(),
+      value: loading ? '...' : Number(stats.discordMembers).toLocaleString(),
       icon: MessageSquare,
       color: 'text-blue-400',
     },
     {
       label: 'Registered Users',
-      value: '100+', // Tu pourras le rendre dynamique plus tard
+      value: '100+',
       icon: Users,
       color: 'text-primary',
     },
     {
       label: 'Total Purchases',
-      value: '3', // Tu pourras le rendre dynamique plus tard
+      value: '3',
       icon: ShoppingCart,
       color: 'text-accent',
     },
