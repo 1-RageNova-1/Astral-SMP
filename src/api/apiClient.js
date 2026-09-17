@@ -31,6 +31,7 @@ export const api = {
     },
     staff: () => request('/api/public/staff'),
     settings: () => request('/api/public/settings'),
+    status: () => request('/api/public/status'), // ← AJOUTÉ
   },
   admin: {
     dashboard: () => request('/api/admin/dashboard'),
