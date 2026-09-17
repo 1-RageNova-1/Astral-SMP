@@ -116,7 +116,7 @@ export async function GET(request) {
       settings[s.key] = s.value;
     });
 
-    const ip = pickSetting(settings, ['server_ip', 'minecraft_ip', 'ip']) || 'play.astraldupes.com';
+    const ip = pickSetting(settings, ['server_ip', 'minecraft_ip', 'ip']) || 'mc.astralsmp.fr';
     const port = pickSetting(settings, ['server_port', 'minecraft_port', 'port']) || '25565';
     const guildId = extractGuildId(
       pickSetting(settings, ['discord_server_id', 'discord_guild_id', 'discord_id'])

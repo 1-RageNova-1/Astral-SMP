@@ -1,8 +1,8 @@
 export const DEFAULT_SETTINGS = {
   site_name: 'Astral Smp',
   site_description: 'The ultimate Minecraft duplication server',
-  server_ip: 'play.astraldupes.com',
-  server_port: '25565',
+  server_ip: 'mc.astralsmp.fr',
+  server_port: '50565',
   server_version: '1.20.4',
   discord_invite_url: '',
   discord_webhook_url: '',
