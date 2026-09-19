@@ -21,6 +21,11 @@ function extractGuildId(raw) {
   return idMatch ? idMatch[0] : text;
 }
 
+function parsePort(value) {
+  const n = parseInt(String(value || ''), 10);
+  return Number.isFinite(n) ? n : null;
+}
+
 async function liveFetch(admin) {
   const { data: settingsRows } = await admin.from('settings').select('key, value');
   const settings = {};
@@ -28,9 +33,10 @@ async function liveFetch(admin) {
     settings[s.key] = s.value;
   });
 
-  const ip = pickSetting(settings, ['server_ip', 'minecraft_ip', 'ip']) || 'play.astraldupes.com';
+  const ip = pickSetting(settings, ['server_ip', 'minecraft_ip', 'ip']) || 'mc.astralsmp.fr';
   const port = pickSetting(settings, ['server_port', 'minecraft_port', 'port']) || '50565';
-  const address = `${ip}:${port}`;
+  const bedrock_port = parsePort(pickSetting(settings, ['bedrock_port']));
+  const address = port && String(port) !== '25565' ? `${ip}:${port}` : ip;
   const guildId = extractGuildId(
     pickSetting(settings, ['discord_server_id', 'discord_guild_id', 'discord_id'])
   );
@@ -44,7 +50,6 @@ async function liveFetch(admin) {
     max_players: 0,
     version: null,
     motd: null,
-    ping: null,
   };
 
   try {
@@ -57,7 +62,6 @@ async function liveFetch(admin) {
         max_players: data.players?.max ?? 0,
         version: data.version || null,
         motd: data.motd?.clean?.[0] || data.motd?.raw?.[0] || null,
-        ping: data.debug?.ping ?? null,
       };
     }
   } catch (e) {
@@ -67,10 +71,11 @@ async function liveFetch(admin) {
   let discord_members = 0;
   if (guildId && botToken) {
     try {
+      const token = botToken.startsWith('Bot ') ? botToken : `Bot ${botToken}`;
       const res = await fetch(
         `https://discord.com/api/v10/guilds/${guildId}?with_counts=true`,
         {
-          headers: { Authorization: `Bot ${botToken}` },
+          headers: { Authorization: token },
           cache: 'no-store',
         }
       );
@@ -88,6 +93,8 @@ async function liveFetch(admin) {
   return {
     id: 1,
     ...minecraft,
+    ping: null,
+    bedrock_port,
     discord_members,
     updated_at: new Date().toISOString(),
   };
@@ -109,9 +116,8 @@ export async function GET() {
 
     const stats = isFresh ? data : await liveFetch(admin);
 
-    // On essaie d'écrire le cache, mais on n'échoue pas si ça plante
     if (!isFresh) {
-      admin.from('server_stats').upsert(stats).then(() => {}).catch(() => {});
+      admin.from('server_stats').upsert(stats).then(() => { }).catch(() => { });
     }
 
     return jsonOk(stats, {

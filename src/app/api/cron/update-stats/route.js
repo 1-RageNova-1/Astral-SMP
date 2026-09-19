@@ -38,8 +38,14 @@ function extractGuildId(raw) {
   return idMatch ? idMatch[0] : text;
 }
 
+function parsePort(value) {
+  const n = parseInt(String(value || ''), 10);
+  return Number.isFinite(n) ? n : null;
+}
+
 async function fetchMinecraft(ip, port) {
-  const address = port ? `${ip}:${port}` : ip;
+  const address = port && String(port) !== '25565' ? `${ip}:${port}` : ip;
+
   const res = await fetch(`https://api.mcsrvstat.us/3/${address}`, {
     cache: 'no-store',
     headers: { 'User-Agent': 'AstralSMP-Status/1.0' },
@@ -53,7 +59,6 @@ async function fetchMinecraft(ip, port) {
       max_players: data?.players?.max ?? 0,
       version: data?.version || null,
       motd: null,
-      ping: null,
     };
   }
 
@@ -63,43 +68,32 @@ async function fetchMinecraft(ip, port) {
     max_players: data.players?.max ?? 0,
     version: data.version || null,
     motd: data.motd?.clean?.[0] || data.motd?.raw?.[0] || null,
-    ping: data.debug?.ping ?? null,
   };
 }
 
 async function fetchDiscordMembers(guildId, botToken) {
-  if (!guildId) return 0;
+  if (!guildId || !botToken) return 0;
 
-  if (botToken) {
+  const token = botToken.startsWith('Bot ') ? botToken : `Bot ${botToken}`;
+
+  try {
     const res = await fetch(
       `https://discord.com/api/v10/guilds/${guildId}?with_counts=true`,
       {
-        headers: { Authorization: `Bot ${botToken}` },
+        headers: { Authorization: token },
         cache: 'no-store',
       }
     );
     const data = await res.json();
-    if (res.ok) {
-      return data.approximate_member_count || data.member_count || 0;
+    if (!res.ok) {
+      console.error('Discord bot API error:', data);
+      return 0;
     }
-    console.error('Discord bot API error:', data);
-  }
-
-  // Fallback : widget Discord (à activer dans Réglages serveur > Widget)
-  try {
-    const res = await fetch(`https://discord.com/api/guilds/${guildId}/widget.json`, {
-      cache: 'no-store',
-    });
-    const data = await res.json();
-    if (res.ok && typeof data.presence_count === 'number') {
-      // widget ne donne pas toujours le total, seulement les online
-      return data.presence_count;
-    }
+    return data.approximate_member_count || data.member_count || 0;
   } catch (e) {
-    console.error('Discord widget error:', e.message);
+    console.error('Discord members error:', e.message);
+    return 0;
   }
-
-  return 0;
 }
 
 export async function GET(request) {
@@ -118,6 +112,7 @@ export async function GET(request) {
 
     const ip = pickSetting(settings, ['server_ip', 'minecraft_ip', 'ip']) || 'mc.astralsmp.fr';
     const port = pickSetting(settings, ['server_port', 'minecraft_port', 'port']) || '50565';
+    const bedrock_port = parsePort(pickSetting(settings, ['bedrock_port']));
     const guildId = extractGuildId(
       pickSetting(settings, ['discord_server_id', 'discord_guild_id', 'discord_id'])
     );
@@ -131,6 +126,8 @@ export async function GET(request) {
     const payload = {
       id: 1,
       ...minecraft,
+      ping: null,
+      bedrock_port,
       discord_members,
       updated_at: new Date().toISOString(),
     };

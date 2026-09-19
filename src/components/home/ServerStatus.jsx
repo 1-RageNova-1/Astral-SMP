@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import GlassCard from '@/components/shared/GlassCard';
-import { Wifi, WifiOff, Users, Clock, Server, Activity } from 'lucide-react';
+import { Wifi, WifiOff, Users, Clock, Server } from 'lucide-react';
 import { useSettings } from '@/hooks/use-settings';
 
 function unwrap(payload) {
@@ -49,6 +49,7 @@ export default function ServerStatus() {
   const online = Boolean(status?.is_online);
   const players = status?.player_count ?? 0;
   const maxPlayers = status?.max_players ?? '?';
+  const bedrockPort = status?.bedrock_port || settings?.bedrock_port || '—';
 
   const items = [
     {
@@ -72,7 +73,7 @@ export default function ServerStatus() {
     {
       icon: Server,
       label: 'Bedrock',
-      value: settings?.bedrock_port || '—',
+      value: bedrockPort === '—' ? '—' : `:${bedrockPort}`,
       color: 'text-yellow-400',
     },
   ];
