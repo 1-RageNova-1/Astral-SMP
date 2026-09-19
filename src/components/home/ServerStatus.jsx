@@ -70,9 +70,9 @@ export default function ServerStatus() {
       color: 'text-primary',
     },
     {
-      icon: Activity,
-      label: 'Ping',
-      value: status?.ping != null ? `${status.ping}ms` : '—',
+      icon: Server,
+      label: 'Bedrock',
+      value: settings?.bedrock_port || '—',
       color: 'text-yellow-400',
     },
   ];
